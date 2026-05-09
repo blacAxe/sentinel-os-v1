@@ -15,15 +15,20 @@ pub mod lumenlog {
 use lumenlog::LogEvent;
 
 #[derive(Debug, Deserialize)]
-struct SecurityEvent {
+struct Event {
+    id: String,
+    event_type: String,
+    source: String,
+    timestamp: String,
+
     user_id: String,
-    attack_type: String,
+    request_id: String,
+    ip: String,
+
     action: String,
-    ip: Option<String>,
-    path: Option<String>,
-    method: Option<String>,
-    query: Option<String>,
-    timestamp: Option<i64>,
+    severity: String,
+
+    metadata: HashMap<String, String>,
 }
 
 #[tokio::main]
@@ -50,15 +55,31 @@ async fn main() {
         .await;
 }
 
+fn topic_for_event(event: &Event) -> &'static str {
+
+    if event.event_type.starts_with("waf.") {
+        "security-events"
+
+    } else if event.event_type.starts_with("ratelimit.") {
+        "security-events"
+
+    } else if event.event_type.starts_with("auth.") {
+        "auth-events"
+
+    } else {
+        "logs-raw"
+    }
+}
+
 async fn handle_event(
-    event: SecurityEvent,
+    event: Event,
     producer: FutureProducer,
 ) -> Result<impl warp::Reply, warp::Rejection> {
 
     println!(
-        "🚨 SECURITY EVENT: user={} attack={}",
-        event.user_id,
-        event.attack_type
+        "EVENT: type={} user={}",
+        event.event_type,
+        event.user_id
     );
 
     let log_event = LogEvent {
@@ -66,13 +87,13 @@ async fn handle_event(
         host: "waf-node".to_string(),
         level: "SECURITY".to_string(),
         message: format!(
-            "{} attack blocked for user {}",
-            event.attack_type,
+            "{} event triggered for user {}",
+            event.event_type,
             event.user_id
         ),
         timestamp: Utc::now().timestamp(),
         user_id: event.user_id.clone(),
-        attack_type: event.attack_type.clone(),
+        attack_type: event.event_type.clone(),
         action: event.action.clone(),
         metadata: HashMap::new(),
     };
@@ -84,7 +105,7 @@ async fn handle_event(
         .expect("protobuf encode failed");
 
     let result = producer.send(
-        FutureRecord::to("security-events")
+        FutureRecord::to(topic_for_event(&event))
             .payload(&buf)
             .key(&event.user_id),
         Duration::from_secs(0),

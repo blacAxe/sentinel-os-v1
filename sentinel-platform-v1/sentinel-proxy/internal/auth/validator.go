@@ -1,32 +1,44 @@
 package auth
 
 import (
-	"fmt"
-	"os"
+	"errors"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/omar/sentinel-proxy/internal/config"
 )
+
+func ValidateToken(tokenString string) (jwt.MapClaims, error) {
+
+	cfg := config.Load()
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.JWTSecret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, errors.New("invalid token")
+}
 
 func DecodeUsernameFromToken(tokenString string) (string, error) {
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
+	claims, err := ValidateToken(tokenString)
 
 	if err != nil {
 		return "", err
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+	username, ok := claims["username"].(string)
 
-		if name, ok := claims["username"].(string); ok {
-			return name, nil
-		}
-
-		if sub, ok := claims["sub"].(string); ok {
-			return sub, nil
-		}
+	if !ok {
+		return "", errors.New("username missing")
 	}
 
-	return "", fmt.Errorf("invalid token")
+	return username, nil
 }

@@ -6,13 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	authctx "github.com/omar/sentinel-proxy/internal/context"
 	"github.com/omar/sentinel-proxy/internal/events"
-	"github.com/omar/sentinel-proxy/internal/logger"
-	"github.com/omar/sentinel-proxy/internal/metrics"
 	"github.com/omar/sentinel-proxy/internal/rules"
+	"github.com/omar/sentinel-proxy/internal/telemetry"
 )
 
 func WAF(next http.Handler) http.Handler {
@@ -26,7 +24,6 @@ func WAF(next http.Handler) http.Handler {
 			ip, _, _ = net.SplitHostPort(r.RemoteAddr)
 		}
 
-		metrics.IncTotal()
 		blocked, reason := rules.EvaluateRequest(r, query)
 
 		if blocked {
@@ -39,25 +36,21 @@ func WAF(next http.Handler) http.Handler {
 
 			fmt.Printf("WAF USER: %s\n", userID)
 
-			event := events.Event{
-				ID:        requestID,
-				Type:      events.EventAttackDetected,
-				Source:    "proxy.waf",
-				Timestamp: time.Now(),
-				UserID:    userID,
-				Payload: map[string]any{
-					"ip":           r.RemoteAddr,
-					"path":         r.URL.Path,
-					"method":       r.Method,
-					"query":        r.URL.RawQuery,
-					"attack_type":  reason,
-					"action":       "blocked",
-				},
-			}
+			metadata := events.RequestMetadata(r)
+			metadata["attack_type"] = reason
 
-			logger.LogEvent(event)
-			events.SendEvent(event)
-			metrics.IncBlocked()
+			event := events.NewEvent(
+				events.EventWAFBlocked,
+				"proxy.waf",
+				events.SeverityCritical,
+				requestID,
+				userID,
+				ip,
+				"blocked",
+				metadata,
+			)
+
+			telemetry.Emit(event)
 
 			// NOW it is safe to block the user
 			http.Error(w, "Blocked by Sentinel", http.StatusForbidden)

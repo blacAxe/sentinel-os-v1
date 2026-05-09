@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/omar/sentinel-proxy/internal/context"
 	authctx "github.com/omar/sentinel-proxy/internal/context"
 	"github.com/omar/sentinel-proxy/internal/events"
-	"github.com/omar/sentinel-proxy/internal/logger"
-	"github.com/omar/sentinel-proxy/internal/metrics"
+	"github.com/omar/sentinel-proxy/internal/telemetry"
 )
 
 type Client struct {
@@ -29,8 +29,7 @@ func RateLimiter(next http.Handler) http.Handler {
 			return
 		}
 
-		if strings.Contains(r.URL.Path, "favicon.ico") ||
-			strings.Contains(r.URL.Path, ".well-known") {
+		if context.IsExcludedPath(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -73,26 +72,21 @@ func RateLimiter(next http.Handler) http.Handler {
 				userID = reqCtx.UserID
 			}
 
-			event := events.Event{
-				ID:        requestID,
-				Type:      events.EventAttackDetected,
-				Source:    "proxy.ratelimiter",
-				Timestamp: time.Now(),
-				UserID:    userID,
-				Payload: map[string]any{
-					"ip":          ip,
-					"path":        r.URL.Path,
-					"method":      r.Method,
-					"query":       r.URL.RawQuery,
-					"attack_type": "RATE_LIMIT",
-					"action":      "blocked",
-				},
-			}
+			metadata := events.RequestMetadata(r)
+			metadata["attack_type"] = "RATE_LIMIT"
 
-			logger.LogEvent(event)
-			events.SendEvent(event)
-			metrics.IncBlocked()
-			metrics.IncAttack("RATE_LIMIT")
+			event := events.NewEvent(
+				events.EventRateLimitBlocked,
+				"proxy.ratelimiter",
+				events.SeverityWarning,
+				requestID,
+				userID,
+				ip,
+				"blocked",
+				metadata,
+			)
+
+			telemetry.Emit(event)
 			// ---------------------
 
 			http.Error(w, "Too many requests", http.StatusTooManyRequests)
