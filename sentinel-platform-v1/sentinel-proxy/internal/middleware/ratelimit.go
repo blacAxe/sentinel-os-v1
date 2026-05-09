@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	authctx "github.com/omar/sentinel-proxy/internal/context"
 	"github.com/omar/sentinel-proxy/internal/events"
 	"github.com/omar/sentinel-proxy/internal/logger"
 	"github.com/omar/sentinel-proxy/internal/metrics"
@@ -66,25 +67,26 @@ func RateLimiter(next http.Handler) http.Handler {
 		if len(client.Requests) > 10 {
 			requestID := r.Context().Value(RequestIDKey).(string)
 
-			val := r.Context().Value("user_id")
-			userID, _ := val.(string)
+			userID := "anonymous"
 
-			if userID == "" {
-				userID = "anonymous"
+			if reqCtx, ok := authctx.GetRequestContext(r.Context()); ok {
+				userID = reqCtx.UserID
 			}
 
-			event := events.SecurityEvent{
-				EventType:      "rate_limited",
-				RequestID:      requestID,
-				User:           userID,
-				IP:             ip,
-				Path:           r.URL.Path,
-				Method:         r.Method,
-				Query:          r.URL.RawQuery,
-				AttackDetected: true,
-				AttackType:     "RATE_LIMIT",
-				Action:         "blocked",
-				Timestamp:      time.Now().Unix(),
+			event := events.Event{
+				ID:        requestID,
+				Type:      events.EventAttackDetected,
+				Source:    "proxy.ratelimiter",
+				Timestamp: time.Now(),
+				UserID:    userID,
+				Payload: map[string]any{
+					"ip":          ip,
+					"path":        r.URL.Path,
+					"method":      r.Method,
+					"query":       r.URL.RawQuery,
+					"attack_type": "RATE_LIMIT",
+					"action":      "blocked",
+				},
 			}
 
 			logger.LogEvent(event)

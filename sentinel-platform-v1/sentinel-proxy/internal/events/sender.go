@@ -8,22 +8,9 @@ import (
 	"time"
 )
 
-func SendEvent(event SecurityEvent) {
+func SendEvent(event Event) {
 
-	eventMap := map[string]interface{}{
-		"event_type":  event.EventType,
-		"request_id":  event.RequestID,
-		"user_id":     event.User,
-		"ip":          event.IP,
-		"path":        event.Path,
-		"method":      event.Method,
-		"query":       event.Query,
-		"attack_type": event.AttackType,
-		"action":      event.Action,
-		"timestamp":   event.Timestamp,
-	}
-
-	jsonData, err := json.Marshal(eventMap)
+	jsonData, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("JSON marshal failed: %v", err)
 		return
@@ -46,5 +33,5 @@ func SendEvent(event SecurityEvent) {
 
 	defer resp.Body.Close()
 
-	log.Printf("Event shipped to Rust agent for user: %s", event.User)
+	log.Printf("Event shipped to Rust agent for user:")
 }

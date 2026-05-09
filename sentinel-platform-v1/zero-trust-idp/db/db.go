@@ -139,7 +139,7 @@ func GetSession(hashedToken string) (string, error) {
 }
 
 func DeleteSession(hashedToken string) error {
-	query := `DELETE FROM sessions WHERE refresh_token=$1`
+	query := `DELETE FROM sessions WHERE refresh_token_hash=$1`
 	_, err := DB.Exec(query, hashedToken)
 	return err
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	authctx "github.com/omar/sentinel-proxy/internal/context"
 )
 
 type contextKey string
@@ -15,7 +16,14 @@ func RequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
 
-		ctx := context.WithValue(r.Context(), RequestIDKey, id)
+		reqCtx := &authctx.RequestContext{
+			RequestID: id,
+		}
+
+		ctx := authctx.SetRequestContext(r.Context(), reqCtx)
+
+		ctx = context.WithValue(ctx, RequestIDKey, id)
+
 		r = r.WithContext(ctx)
 
 		w.Header().Set("X-Request-ID", id)

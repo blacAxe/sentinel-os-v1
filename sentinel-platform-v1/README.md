@@ -1,14 +1,16 @@
-# Sentinel Platform v1
+# Sentinel Platform v1 — Distributed Security Infrastructure
 
-Distributed security observability pipeline built with Go, Rust, Kafka-compatible streaming, ClickHouse, and Docker.
+Sentinel Platform v1 is the distributed backend infrastructure powering Sentinel OS.
 
-Sentinel Platform is a real-time event-driven system designed to simulate how modern security infrastructure detects, processes, transports, and stores security telemetry across distributed services.
+The platform simulates how modern security systems ingest, transport, analyze, and monitor security telemetry across distributed services using event-driven architecture and real-time streaming pipelines.
 
-The platform demonstrates cross-language backend engineering, asynchronous event pipelines, distributed systems orchestration, and security-focused architecture.
+Built with Go, Rust, Kafka-compatible streaming, ClickHouse, PostgreSQL, and Docker, the system demonstrates distributed systems engineering, backend security architecture, asynchronous event processing, and observability infrastructure design.
 
 ---
 
 # Architecture Overview
+
+Sentinel Platform serves as the backend security infrastructure layer for the Sentinel OS dashboard and authentication system.
 
 The system is composed of multiple independent services communicating through Kafka-compatible event streaming using Redpanda.
 
@@ -59,6 +61,10 @@ Real-Time Alerting Service
 - Cross-language service communication
 - Graceful startup orchestration handling
 - Real-time alert monitoring
+- JWT-based authentication support
+- Role-based access control (RBAC)
+- WebAuthn/passkey identity integration
+- Server-Sent Events (SSE) live event streaming
 
 ---
 
@@ -226,15 +232,15 @@ This project was built to explore:
 
 # Future Improvements
 
-- Dashboard UI
-- Metrics aggregation
-- Threat scoring
-- Rate limiting engine
-- Multi-node Kafka deployment
-- Authentication middleware
+- Real-time metrics aggregation
+- Threat intelligence enrichment
+- Distributed tracing with OpenTelemetry
 - Kubernetes deployment
+- Multi-node Redpanda clustering
+- Alert correlation engine
+- Threat scoring pipeline
 - SIEM integrations
-- OpenTelemetry support
+- Prometheus/Grafana monitoring
 
 ---
 

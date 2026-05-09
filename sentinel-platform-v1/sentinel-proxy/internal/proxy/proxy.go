@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,10 +9,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"strings"
 	"sync"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/omar/sentinel-proxy/internal/config"
 	"github.com/omar/sentinel-proxy/internal/metrics"
 	"github.com/omar/sentinel-proxy/internal/middleware"
@@ -128,36 +125,22 @@ func proxyTo(target *url.URL, w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	for k, v := range resp.Header {
-		w.Header()[k] = v
+	for key, values := range resp.Header {
+
+		// Prevent duplicate CORS headers
+		if key == "Access-Control-Allow-Origin" ||
+			key == "Access-Control-Allow-Headers" ||
+			key == "Access-Control-Allow-Methods" ||
+			key == "Access-Control-Allow-Credentials" {
+			continue
+		}
+
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
 	}
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
-}
-
-// DecodeUsernameFromToken pulls 'bob' out of the JWT
-func DecodeUsernameFromToken(tokenString string) (string, error) {
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
-		if name, ok := claims["username"].(string); ok {
-			return name, nil
-		}
-
-		if sub, ok := claims["sub"].(string); ok {
-			return sub, nil
-		}
-	}
-
-	return "", fmt.Errorf("invalid token")
 }
 
 // =========================
@@ -175,12 +158,11 @@ func (a *App) Start() {
 		log.Fatal("Invalid IDP_URL:", err)
 	}
 
-	reverseProxy := httputil.NewSingleHostReverseProxy(idpURL)
+	proxy := httputil.NewSingleHostReverseProxy(idpURL)
 	mux := http.NewServeMux()
-	idpProxy := httputil.NewSingleHostReverseProxy(idpURL)
 
 	authHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idpProxy.ServeHTTP(w, r)
+		proxy.ServeHTTP(w, r)
 	})
 
 	mux.Handle("/auth/", authHandler)
@@ -195,53 +177,14 @@ func (a *App) Start() {
 	mux.HandleFunc("/logs", logsHandler)
 
 	// MAIN HANDLER WITH MIDDLEWARE
-	finalHandler := middleware.CORS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Identify the user FIRST
-		userID := "anonymous"
-
-		auth := r.Header.Get("Authorization")
-
-		// Fallback to access_token cookie
-		if auth == "" {
-			cookie, err := r.Cookie("access_token")
-			if err == nil {
-				auth = cookie.Value
-			}
-		}
-
-		// Remove Bearer prefix if present
-		if after, ok := strings.CutPrefix(auth, "Bearer "); ok {
-			auth = after
-		}
-
-		log.Printf("AUTH TOKEN: %s", auth)
-
-		if auth != "" {
-			if name, err := DecodeUsernameFromToken(auth); err == nil {
-				userID = name
-			}
-		}
-
-		log.Printf("DECODED USER: %s", userID)
-
-		// Attach the Identity to the Request Context
-		// update 'r' directly so that all subsequent handlers see the user_id
-		ctx := context.WithValue(r.Context(), "user_id", userID)
-		r = r.WithContext(ctx)
-
-		securedHandler := middleware.Chain(
+	finalHandler := middleware.CORS(
+		middleware.Chain(
 			middleware.RequestID,
+			middleware.Identity,
 			middleware.RateLimiter,
-			middleware.WAF, // WAF will now find "jon" in the context
-		)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This block handles cases where the WAF flags but allows the request to continue[cite: 6]
-
-			reverseProxy.ServeHTTP(w, r)
-		}))
-
-		// Execute the chain with the updated request 'r'
-		securedHandler.ServeHTTP(w, r)
-	}))
+			middleware.WAF,
+		)(mux),
+	)
 
 	port := os.Getenv("PORT")
 	if port == "" {

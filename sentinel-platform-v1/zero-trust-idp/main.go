@@ -12,28 +12,13 @@ import (
 )
 
 func secretHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Congrats Bob! This is top-secret data only visible with a Passkey."))
-}
+	w.Header().Set("Content-Type", "application/json")
 
-// UPDATED CORS MIDDLEWARE
-// This handles the "Preflight" handshake that browsers require.
-func withCORS(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Points to Sentinel OS (Frontend)
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		// MUST include X-Refresh-Token and X-CSRF-Token here or the browser will kill the request
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Refresh-Token, X-CSRF-Token")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		h.ServeHTTP(w, r)
-	})
+	w.Write([]byte(`{
+		"message":"Access granted",
+		"role":"admin",
+		"username":"bob"
+	}`))
 }
 
 func main() {
@@ -98,13 +83,8 @@ func main() {
 	// Serve frontend (index.html) at root
 	mux.Handle("/", fileServer)
 
-	// WRAP mux WITH CORS
-	handlerWithCORS := withCORS(mux)
-
+	// Start the server
 	// Start the server
 	log.Println("Server started at http://localhost:8080")
-	err = http.ListenAndServe(":8080", handlerWithCORS)
-	if err != nil {
-		log.Fatal("ListenAndServe Error: ", err)
-	}
+	err = http.ListenAndServe(":8080", mux)
 }
