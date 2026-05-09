@@ -4,9 +4,6 @@ import { login, getUserDataSafe as getUserData, logout, register } from "@/lib/a
 import MouseGlow from "@/components/ui/MouseGlow";
 import { useState, useEffect } from "react";
 import SystemMetrics from "@/components/system/SystemMetrics";
-import Terminal from "@/components/system/Terminal";
-import ProjectPanel from "@/components/system/ProjectPanel";
-import { projects } from "@/lib/projects";
 
 const colorMap: Record<string, string> = {
   idp: "border-blue-500/40 hover:shadow-blue-500/20",
@@ -19,7 +16,6 @@ const colorMap: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const [activeProject, setActiveProject] = useState<string | null>(null);
   const [flowStep, setFlowStep] = useState(0);
   const [response, setResponse] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -33,7 +29,7 @@ export default function DashboardPage() {
     let mounted = true;
     const interval = setInterval(() => {
       if (!mounted) return;
-      setFlowStep((prev) => (prev + 1) % 3);
+      setFlowStep((prev) => (prev + 1) % 2);
     }, 6000);
 
     const token = localStorage.getItem("sentinel_token");
@@ -186,93 +182,230 @@ const handleSimulateAttack = async () => {
         {/* --- SYSTEM FLOW SVG --- */}
         <svg className="pointer-events-none absolute left-[-120px] top-0 h-full w-[120px]" viewBox="0 0 120 800" preserveAspectRatio="none">
           <path id="path-metrics-terminal" d="M110 60 C40 120, 40 260, 110 320" stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none" className={`transition-opacity duration-500 ${flowStep === 0 ? "opacity-80" : "opacity-10"}`} style={{ strokeDasharray: "6 6", animation: flowStep === 0 ? "flow 1s linear" : "none" }} />
-          <path id="path-terminal-projects" d="M110 320 C40 380, 40 540, 110 600" stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none" className={`transition-opacity duration-500 ${flowStep === 1 ? "opacity-80" : "opacity-10"}`} style={{ strokeDasharray: "6 6", animation: "flow 1s linear infinite" }} />
           {flowStep === 0 && (
             <circle r="4" fill="#60a5fa" opacity="0.9">
               <animateMotion dur="3.5s" repeatCount="indefinite"><mpath href="#path-metrics-terminal" /></animateMotion>
             </circle>
           )}
-          {flowStep === 1 && (
-            <circle r="4" fill="#c084fc" opacity="0.9">
-              <animateMotion dur="3.5s" repeatCount="indefinite"><mpath href="#path-terminal-projects" /></animateMotion>
-            </circle>
-          )}
-          <circle cx="110" cy={flowStep === 0 ? 60 : flowStep === 1 ? 320 : 600} r="6" fill="white" className="transition-all duration-700" />
+          <circle cx="110" cy={flowStep === 0 ? 60 : 600} r="6" fill="white" className="transition-all duration-700" />
         </svg>
 
-        <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/70 blur-sm transition-all duration-700" style={{ top: flowStep === 0 ? "5%" : flowStep === 1 ? "40%" : "75%" }} />
+        <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/70 blur-sm transition-all duration-700" style={{ top: flowStep === 0 ? "5%" : "75%", }} />
 
         {/* --- ACTIONS SECTION --- */}
-        <div className="flex flex-wrap gap-4 items-center">
+        {/* --- COMMAND CENTER --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          <button
-            onClick={handleProxyTest}
-            disabled={loading}
-            className={`px-4 py-2 rounded border transition ${
-              loading
-                ? "opacity-50 cursor-not-allowed border-gray-700"
-                : "border-white/20 hover:bg-white/10"
-            }`}
-          >
-            {loading ? "Sending..." : "Test Proxy Route"}
-          </button>
+          {/* LEFT SIDE */}
+          <div className="lg:col-span-2 border border-cyan-500/10 rounded-2xl bg-black/40 backdrop-blur-xl p-6">
 
-          <button
-            onClick={handleSimulateAttack}
-            className="px-4 py-2 rounded border border-red-500/30 hover:bg-red-500/10"
-          >
-            Simulate Attack
-          </button>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-cyan-400/70">
+                  Sentinel Control Center
+                </p>
 
-          <button
-            onClick={handleProtectedRequest}
-            disabled={!isAuthenticated}
-            className={`px-4 py-2 rounded border transition ${
-              isAuthenticated
-                ? "border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-300"
-                : "border-gray-700 text-gray-600 cursor-not-allowed"
-            }`}
-          >
-            Access Protected API
-          </button>
-
-        </div>
-
-        {/* --- REGISTRATION CARD --- */}
-        <div className="p-4 border border-white/10 rounded-lg bg-black/20 max-w-md">
-          <h2 className="text-xl font-bold mb-4">Identity Setup</h2>
-          <div className="flex gap-2">
-            <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="flex-1 bg-gray-800 text-white p-2 rounded outline-none border border-white/5 focus:border-blue-500" />
-            <button onClick={handleRegister} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded transition font-semibold">Register</button>
-          </div>
-          {status && <p className="mt-2 text-sm text-blue-400 animate-pulse">{status}</p>}
-        </div>
-
-        {/* --- LOGIN SECTION --- */}
-        <div className="flex flex-wrap items-center gap-3">
-
-          {isAuthenticated ? (
-            <>
-              <div className="px-3 py-2 rounded border border-emerald-500/20 bg-emerald-500/5 text-emerald-300 text-sm">
-                Authenticated as <span className="font-semibold">{username}</span>
+                <h2 className="text-2xl font-bold mt-2">
+                  Security Operations
+                </h2>
               </div>
 
+              <div className="px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs">
+                SYSTEM ONLINE
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
               <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded hover:bg-red-500/30 transition"
+                onClick={handleProxyTest}
+                disabled={loading}
+                className={`group relative overflow-hidden rounded-xl border p-5 text-left transition-all duration-300 ${
+                  loading
+                    ? "opacity-50 cursor-not-allowed border-gray-700"
+                    : "border-cyan-500/20 hover:border-cyan-400/40 hover:bg-cyan-500/5"
+                }`}
               >
-                Logout
+                <div className="text-xs uppercase tracking-wide text-cyan-400 mb-2">
+                  Proxy
+                </div>
+
+                <div className="text-lg font-semibold mb-1">
+                  Test Route
+                </div>
+
+                <div className="text-sm text-gray-400">
+                  Send request through Sentinel proxy stack
+                </div>
               </button>
-            </>
-          ) : (
-            <button
-              onClick={handleLogin}
-              disabled={authLoading}
-              className="px-4 py-2 bg-white/10 border border-white/20 rounded hover:bg-white/20 transition"
-            >
-              {authLoading ? "Authenticating..." : "Login with Passkey"}
-            </button>
-          )}
+
+              <button
+                onClick={handleSimulateAttack}
+                className="group relative overflow-hidden rounded-xl border border-red-500/20 hover:border-red-400/40 hover:bg-red-500/5 p-5 text-left transition-all duration-300"
+              >
+                <div className="text-xs uppercase tracking-wide text-red-400 mb-2">
+                  WAF
+                </div>
+
+                <div className="text-lg font-semibold mb-1">
+                  Simulate Attack
+                </div>
+
+                <div className="text-sm text-gray-400">
+                  Trigger SQL injection detection pipeline
+                </div>
+              </button>
+
+              <button
+                onClick={handleProtectedRequest}
+                disabled={!isAuthenticated}
+                className={`group relative overflow-hidden rounded-xl border p-5 text-left transition-all duration-300 ${
+                  isAuthenticated
+                    ? "border-emerald-500/20 hover:border-emerald-400/40 hover:bg-emerald-500/5"
+                    : "border-gray-700 text-gray-600 cursor-not-allowed"
+                }`}
+              >
+                <div className="text-xs uppercase tracking-wide text-emerald-400 mb-2">
+                  Zero Trust
+                </div>
+
+                <div className="text-lg font-semibold mb-1">
+                  Protected API
+                </div>
+
+                <div className="text-sm text-gray-400">
+                  Validate JWT and identity-aware access
+                </div>
+              </button>
+
+            </div>
+          </div>
+
+          {/* RIGHT SIDE */}
+          <div className="border border-white/10 rounded-2xl bg-black/40 backdrop-blur-xl p-6">
+
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-gray-500">
+                  Identity
+                </p>
+
+                <h2 className="text-xl font-bold mt-2">
+                  Authentication
+                </h2>
+              </div>
+
+              <div className={`w-3 h-3 rounded-full ${
+                isAuthenticated ? "bg-emerald-400" : "bg-red-400"
+              }`} />
+            </div>
+
+            <div className="space-y-4">
+
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
+                className="w-full bg-gray-900/80 text-white p-3 rounded-xl outline-none border border-white/5 focus:border-cyan-500"
+              />
+
+              <button
+                onClick={handleRegister}
+                className="w-full bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded-xl transition font-semibold"
+              >
+                Register Passkey
+              </button>
+
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition"
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  disabled={authLoading}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition"
+                >
+                  {authLoading ? "Authenticating..." : "Login with Passkey"}
+                </button>
+              )}
+
+              {status && (
+                <div className="text-sm text-cyan-400 border border-cyan-500/10 bg-cyan-500/5 rounded-xl p-3">
+                  {status}
+                </div>
+              )}
+
+            </div>
+          </div>
+
+        </div>
+
+        {/* --- LIVE SYSTEM STATUS --- */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+
+          <div className="rounded-xl border border-cyan-500/10 bg-cyan-500/5 p-4">
+            <div className="text-xs uppercase tracking-wide text-cyan-400 mb-2">
+              Proxy
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-sm text-white">Operational</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-purple-500/10 bg-purple-500/5 p-4">
+            <div className="text-xs uppercase tracking-wide text-purple-400 mb-2">
+              LumenLog
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-sm text-white">Streaming</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-red-500/10 bg-red-500/5 p-4">
+            <div className="text-xs uppercase tracking-wide text-red-400 mb-2">
+              WAF Engine
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-sm text-white">Active</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-yellow-500/10 bg-yellow-500/5 p-4">
+            <div className="text-xs uppercase tracking-wide text-yellow-400 mb-2">
+              Event Bus
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-sm text-white">Connected</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
+            <div className="text-xs uppercase tracking-wide text-emerald-400 mb-2">
+              Identity
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${
+                isAuthenticated ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+              }`} />
+
+              <span className="text-sm text-white">
+                {isAuthenticated ? "Authenticated" : "Anonymous"}
+              </span>
+            </div>
+          </div>
 
         </div>
 
@@ -303,7 +436,7 @@ const handleSimulateAttack = async () => {
               events.map((event, idx) => (
                 <div
                   key={idx}
-                  className="font-mono text-sm text-green-400 border-b border-white/5 pb-2"
+                  className="font-mono text-sm text-green-400 border-b border-white/5 pb-2 animate-in fade-in slide-in-from-top-1 duration-300"
                 >
                   {event}
                 </div>
@@ -319,33 +452,7 @@ const handleSimulateAttack = async () => {
           <h2 className="text-sm text-gray-400 mb-4 uppercase tracking-wide">System Metrics</h2>
           <SystemMetrics active={flowStep === 0} />
         </div>
-
-        <div className={`relative ${flowStep === 1 ? "animate-pulse" : ""}`}>
-          <div className="absolute -left-8 top-2 w-2 h-2 rounded-full bg-green-400" />
-          <h2 className="text-sm text-gray-400 mb-4 uppercase tracking-wide">Live Activity</h2>
-          <Terminal active={flowStep === 1} />
-        </div>
-
-        <div className={`relative ${flowStep === 2 ? "animate-pulse" : ""}`}>
-          <div className="absolute -left-8 top-2 w-2 h-2 rounded-full bg-purple-400" />
-          <h2 className="text-sm text-gray-400 mb-4 uppercase tracking-wide">Project Status</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(projects).map(([key, project]) => (
-              <div key={key} onClick={() => setActiveProject(key)} className={`cursor-pointer group relative border rounded-xl p-5 bg-black/60 backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${colorMap[key] || "border-white/10"} ${flowStep === 2 ? "shadow-[0_0_20px_rgba(255,255,255,0.05)]" : ""}`}>
-                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition blur-xl bg-white/5" />
-                <div className="relative">
-                  <p className="text-xs text-gray-500 mb-1 uppercase">{key}</p>
-                  <h3 className="text-lg font-semibold mb-2">{project.title}</h3>
-                  <p className="text-sm text-gray-400 line-clamp-2">{project.description}</p>
-                  <div className="mt-4 text-xs text-gray-500">Status: <span className="text-green-400">Active</span></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-
-      <ProjectPanel project={activeProject} onClose={() => setActiveProject(null)} />
     </div>
   );
 }
