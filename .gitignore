@@ -1,0 +1,48 @@
+# -------------------------
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Go
+bin/
+dist/
+coverage.out
+
+# Rust
+target/
+Cargo.lock
+
+# Keep Cargo.lock ONLY for applications.
+# Remove the ignore above if a Rust app should commit Cargo.lock.
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Misc
+tmp/
+temp/
+.cache/

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL || "http://localhost:8081";
+const API_URL = "/api/metrics";
 
 export default function SystemMetrics({ active }: { active?: boolean }) {
   const [requests, setRequests] = useState(0);
@@ -14,7 +14,7 @@ export default function SystemMetrics({ active }: { active?: boolean }) {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${PROXY_URL}/stats`);
+        const res = await fetch(API_URL);
         if (!res.ok) throw new Error("Network response was not ok");
         
         const data = await res.json();

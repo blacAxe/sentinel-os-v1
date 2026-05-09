@@ -26,7 +26,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [username, setUsername] = useState("bob");
-  const [status, setStatus] = useState(""); // For registration status
+  const [status, setStatus] = useState(""); 
+  const [events, setEvents] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -35,9 +36,12 @@ export default function DashboardPage() {
       setFlowStep((prev) => (prev + 1) % 3);
     }, 6000);
 
-    const token = localStorage.getItem("token");
-    if (token) {
+    const token = localStorage.getItem("sentinel_token");
+    const storedUser = localStorage.getItem("sentinel_user");
+
+    if (token && storedUser) {
       setIsAuthenticated(true);
+      setUsername(storedUser);
     }
 
     return () => {
@@ -45,6 +49,15 @@ export default function DashboardPage() {
       clearInterval(interval);
     };
   }, []);
+
+  const addEvent = (message: string) => {
+    const time = new Date().toLocaleTimeString();
+
+    setEvents((prev) => [
+      `[${time}] ${message}`,
+      ...prev.slice(0, 7),
+    ]);
+  };
 
   const handleProxyTest = async () => {
     if (loading) return;
@@ -60,11 +73,41 @@ export default function DashboardPage() {
     }
   };
 
+  const handleProtectedRequest = async () => {
+  try {
+    const token = localStorage.getItem("sentinel_token");
+
+    if (!token) {
+      setResponse("❌ No JWT found");
+      return;
+    }
+
+    const res = await fetch("http://localhost:8081/api/secret-data", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Protected route failed (${res.status})`);
+    }
+
+    const data = await res.json();
+
+    setResponse(`🔐 Access Granted\nRole: ${data.role}\nUser: ${data.username}`);
+    addEvent(`Protected API accessed by ${data.username}`);
+
+  } catch (err: any) {
+    setResponse(`❌ ${err.message}`);
+  }
+};
+
   const handleRegister = async () => {
     try {
       setStatus("Creating passkey...");
       await register(username);
       setStatus("✅ Registered! You can now login.");
+      addEvent(`Passkey registered for ${username}`);
     } catch (err: any) {
       console.error(err);
       setStatus(`❌ Error: ${err.message}`);
@@ -75,9 +118,16 @@ export default function DashboardPage() {
     try {
       setAuthLoading(true);
       const data = await login(username);
+
+      if (data?.token) {
+        localStorage.setItem("sentinel_token", data.token);
+        localStorage.setItem("sentinel_user", username);
+      }
+
       setIsAuthenticated(true);
-      setResponse(data);
-      alert("✅ Login success");
+      setResponse("✅ Authenticated successfully");
+      setStatus(`Authenticated as ${username}`);
+      addEvent(`JWT authenticated for ${username}`);
     } catch (err: any) {
       console.error(err);
       setResponse(err.message);
@@ -89,9 +139,14 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await logout();
+
+    localStorage.removeItem("sentinel_token");
+    localStorage.removeItem("sentinel_user");
+
     setIsAuthenticated(false);
-    setResponse(null);
-    alert("Logged out");
+    setResponse("Logged out");
+    addEvent(`Session cleared for ${username}`);
+    setStatus("");
   };
 
 const handleSimulateAttack = async () => {
@@ -107,6 +162,7 @@ const handleSimulateAttack = async () => {
 
     if (res.status === 403) {
       setResponse("✅ Sentinel successfully blocked the attack!");
+      addEvent("Blocked SQL injection attempt");
     } else {
       setResponse("❌ Attack Bypassed the Proxy. Status: " + res.status);
     }
@@ -148,16 +204,38 @@ const handleSimulateAttack = async () => {
 
         {/* --- ACTIONS SECTION --- */}
         <div className="flex flex-wrap gap-4 items-center">
-          <button onClick={handleProxyTest} disabled={loading} className={`px-4 py-2 rounded border transition ${loading ? "opacity-50 cursor-not-allowed border-gray-700" : "border-white/20 hover:bg-white/10"}`}>
+
+          <button
+            onClick={handleProxyTest}
+            disabled={loading}
+            className={`px-4 py-2 rounded border transition ${
+              loading
+                ? "opacity-50 cursor-not-allowed border-gray-700"
+                : "border-white/20 hover:bg-white/10"
+            }`}
+          >
             {loading ? "Sending..." : "Test Proxy Route"}
           </button>
 
-          <button 
-            onClick={handleSimulateAttack} 
+          <button
+            onClick={handleSimulateAttack}
             className="px-4 py-2 rounded border border-red-500/30 hover:bg-red-500/10"
           >
             Simulate Attack
           </button>
+
+          <button
+            onClick={handleProtectedRequest}
+            disabled={!isAuthenticated}
+            className={`px-4 py-2 rounded border transition ${
+              isAuthenticated
+                ? "border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-300"
+                : "border-gray-700 text-gray-600 cursor-not-allowed"
+            }`}
+          >
+            Access Protected API
+          </button>
+
         </div>
 
         {/* --- REGISTRATION CARD --- */}
@@ -171,14 +249,31 @@ const handleSimulateAttack = async () => {
         </div>
 
         {/* --- LOGIN SECTION --- */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+
           {isAuthenticated ? (
-            <button onClick={handleLogout} className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded hover:bg-red-500/30">Logout</button>
+            <>
+              <div className="px-3 py-2 rounded border border-emerald-500/20 bg-emerald-500/5 text-emerald-300 text-sm">
+                Authenticated as <span className="font-semibold">{username}</span>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded hover:bg-red-500/30 transition"
+              >
+                Logout
+              </button>
+            </>
           ) : (
-            <button onClick={handleLogin} className="px-4 py-2 bg-white/10 border border-white/20 rounded hover:bg-white/20">
-              {authLoading ? "Logging in..." : "Login with Passkey"}
+            <button
+              onClick={handleLogin}
+              disabled={authLoading}
+              className="px-4 py-2 bg-white/10 border border-white/20 rounded hover:bg-white/20 transition"
+            >
+              {authLoading ? "Authenticating..." : "Login with Passkey"}
             </button>
           )}
+
         </div>
 
         {/* --- RESPONSE BOX --- */}
@@ -188,6 +283,34 @@ const handleSimulateAttack = async () => {
               {typeof response === "string" ? response : JSON.stringify(response, null, 2)}
             </div>
           )}
+        </div>
+
+        {/* --- LIVE EVENT FEED --- */}
+        <div className="relative">
+          <div className="absolute -left-8 top-2 w-2 h-2 rounded-full bg-red-400" />
+
+          <h2 className="text-sm text-gray-400 mb-4 uppercase tracking-wide">
+            Security Event Feed
+          </h2>
+
+          <div className="border border-white/10 rounded-xl bg-black/40 backdrop-blur-md p-4 space-y-2 max-w-4xl">
+            
+            {events.length === 0 ? (
+              <p className="text-gray-500 text-sm">
+                No events captured yet.
+              </p>
+            ) : (
+              events.map((event, idx) => (
+                <div
+                  key={idx}
+                  className="font-mono text-sm text-green-400 border-b border-white/5 pb-2"
+                >
+                  {event}
+                </div>
+              ))
+            )}
+
+          </div>
         </div>
 
         {/* --- SECTIONS (METRICS, TERMINAL, PROJECTS) --- */}

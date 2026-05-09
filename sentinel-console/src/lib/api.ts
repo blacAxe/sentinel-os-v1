@@ -1,7 +1,7 @@
 // /src/lib/api.ts 
 
 const IDP_URL =
-  process.env.NEXT_PUBLIC_IDP_URL || "http://localhost:8080";
+  process.env.NEXT_PUBLIC_IDP_URL || "http://localhost:8081";
 
 const PROXY_URL =
   process.env.NEXT_PUBLIC_PROXY_URL || "http://localhost:8081";
@@ -167,10 +167,10 @@ export async function login(username: string) {
 
     // 4. Store the tokens
     if (data.access_token) {
-      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("sentinel_token", data.access_token);
     }
     if (data.refresh_token) {
-      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("sentinel_refresh_token", data.refresh_token);
     }
 
     console.log("✅ Login Successful");
@@ -196,7 +196,7 @@ export async function getUserDataSafe(): Promise<string> {
 
   const requestPromise: Promise<string> = (async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("sentinel_token")
 
       if (!token) {
         throw new Error("No token found. Please login.");
@@ -227,8 +227,8 @@ export async function getUserDataSafe(): Promise<string> {
           }
 
         } catch {
-          localStorage.removeItem("token");
-          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("sentinel_token");
+          localStorage.removeItem("sentinel_refresh_token");
           throw new Error("Session expired. Please login again.");
         }
       }
@@ -260,7 +260,7 @@ export const getUserData = getUserDataSafe;
 // --- REFRESH ---
 
 export async function refreshAccessToken(): Promise<string> {
-  const refreshToken = localStorage.getItem("refresh_token");
+  const refreshToken = localStorage.getItem("sentinel_refresh_token")
   const csrfToken = getCookie("csrf_token");
 
   if (!refreshToken) {
@@ -285,7 +285,7 @@ export async function refreshAccessToken(): Promise<string> {
 
   const data = await res.json();
 
-  localStorage.setItem("token", data.access_token);
+  localStorage.setItem("sentinel_token", data.access_token);
 
   console.log("✅ Token refreshed");
 
@@ -295,7 +295,7 @@ export async function refreshAccessToken(): Promise<string> {
 // --- LOGOUT ---
 
 export async function logout() {
-  const refreshToken = localStorage.getItem("refresh_token");
+  const refreshToken = localStorage.getItem("sentinel_refresh_token");
   const csrfToken = getCookie("csrf_token");
 
   try {
@@ -314,6 +314,6 @@ export async function logout() {
     console.warn("Logout request failed (continuing anyway)");
   }
 
-  localStorage.removeItem("token");
-  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("sentinel_token");
+  localStorage.removeItem("sentinel_refresh_token");
 }
