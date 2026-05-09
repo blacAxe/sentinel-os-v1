@@ -1,0 +1,46 @@
+# --- Infrastructure & Databases ---
+# Ignore local database storage and environment secrets
+clickhouse/data/
+redpanda/data/
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# --- Go (Ingestor & Alerter) ---
+bin/
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vendor/
+
+# --- Rust (Agent) ---
+agent/target/
+**/*.rs.bk
+
+# --- Protobuf ---
+# We keep proto/gen/ because we want the generated code in the repo
+!proto/gen/
+
+# --- OS & IDE ---
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Coverage / temp
+coverage.out
+tmp/
+dist/
+
+# Rust lock backup
+**/*.bk
+
+# Test binaries
+*.test
+
+# Windows
+Thumbs.db

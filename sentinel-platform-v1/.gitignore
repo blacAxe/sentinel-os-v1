@@ -1,0 +1,39 @@
+# Environment files
+.env
+**/.env
+
+# Secrets
+token.txt
+*.pem
+*.key
+
+# Binaries
+*.exe
+*.out
+*.test
+main
+bin/
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Go coverage
+coverage.out
+
+# Temporary files
+tmp/
+dist/
+
+# Docker
+*.pid
