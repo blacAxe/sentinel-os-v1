@@ -165,7 +165,7 @@ export async function login(username: string) {
 
     const data = await finishRes.json();
 
-    // 4. Store the tokens
+    // Store the tokens
     if (data.access_token) {
       localStorage.setItem("sentinel_token", data.access_token);
     }

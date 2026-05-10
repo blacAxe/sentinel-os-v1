@@ -45,6 +45,19 @@ Built with:
 - Docker
 - PostgreSQL
 
+### VORTEX
+Distributed malware analysis and threat detection service built with Spring Boot.
+
+Features include:
+
+- Asynchronous file scanning
+- Threat severity classification
+- Worker-based scan processing
+- Analytics aggregation APIs
+- JWT-protected access through proxy
+- PostgreSQL persistence
+- Real-time dashboard integration
+
 ---
 
 ## Current Architecture
@@ -55,9 +68,12 @@ Frontend Console (Next.js)
             ▼
  Sentinel Proxy / WAF
             │
-            ▼
-      Identity Provider
-            │
+     ┌──────┴──────┐
+     ▼             ▼
+Identity       VORTEX
+Provider     Scan Service
+     │             │
+     └──────┬──────┘
             ▼
  PostgreSQL + Kafka Events
 ```
@@ -77,18 +93,22 @@ Frontend Console (Next.js)
 - WAF request filtering
 - Protected admin routes
 - Attack simulation tooling
+- Threat classification engine
+- Malware scan orchestration
 
 ### Infrastructure
 - Dockerized multi-service setup
 - Kafka topic initialization
 - PostgreSQL persistence
 - Service-to-service communication
+- Reverse proxy architecture
 
 ### Frontend
 - Interactive dashboard
 - Live event feed
 - Real-time system activity
 - Visual system flow indicators
+- VORTEX threat dashboard
 
 ---
 
@@ -104,6 +124,22 @@ It currently supports:
 - Attack simulation
 - Security event monitoring
 - Project status visualization
+
+---
+
+# VORTEX Threat Dashboard
+
+![VORTEX Dashboard](assets/vortex-dashboard.png)
+
+The VORTEX dashboard provides a centralized malware analysis interface integrated directly into Sentinel OS.
+
+Current capabilities include:
+- File upload scanning
+- Threat severity analytics
+- Worker processing visibility
+- Scan history tracking
+- Critical threat monitoring
+- Live scan statistics
 
 ---
 
@@ -142,9 +178,9 @@ Current services include:
 - Sentinel Proxy
 - Identity Provider
 - PostgreSQL
-- Kafka
-- Zookeeper
+- Kafka / Redpanda
 - LumenLog services
+- VORTEX scan service
 - Frontend console
 
 ---
@@ -160,6 +196,8 @@ Examples:
 - Access denial
 - Session cleanup
 - WAF attack detection
+- Threat scan events
+- Malware classification results
 
 ---
 
@@ -175,11 +213,13 @@ Example protected route response for authorized admin users.
 
 ### Backend
 - Go
+- Java
 - PostgreSQL
-- Kafka
+- Kafka / Redpanda
 - Docker
 - JWT
 - WebAuthn
+- Spring Boot
 
 ### Frontend
 - Next.js
@@ -191,6 +231,7 @@ Example protected route response for authorized admin users.
 - Docker Compose
 - Kafka Topics
 - Reverse Proxy Architecture
+- Distributed Service Communication
 
 ---
 
@@ -203,7 +244,7 @@ git clone <repo-url>
 cd sentinel-os-v1
 ```
 
-### 2. Start all services
+### 2. Start backend services
 
 ```bash
 docker compose up --build
@@ -230,6 +271,8 @@ Current focus areas:
 - Centralized logging
 - Infrastructure hardening
 - Better service health monitoring
+- Distributed scan workers
+- Live VORTEX event streaming
 
 ---
 
@@ -244,11 +287,20 @@ sentinel-os-v1/
 │   ├── docker-services.png
 │   ├── event-pipeline.png
 │   ├── rbac-access-demo.png
-│   └── security-attack-demo.png
+│   ├── security-attack-demo.png
+│   └── vortex-dashboard.png
 │
 ├── sentinel-console/
 │
 ├── sentinel-platform-v1/
+│
+│   ├── sentinel-proxy/
+│   │
+│   ├── idp/
+│   │
+│   └── vortex-java/
+│
+├── lumenlog/
 │
 └── README.md
 ```
@@ -265,6 +317,9 @@ The goal is not just building features, but understanding:
 - infrastructure orchestration
 - secure backend communication
 - observability pipelines
+- event-driven architecture
+- reverse proxy systems
+- malware analysis workflows
 - real-world debugging workflows
 
 A large part of this repository is dedicated to learning by building systems end-to-end rather than isolated tutorials.

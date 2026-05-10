@@ -115,7 +115,7 @@ export default function SystemGraph({
               if (flowStep >= 3 && (e.id === "e3" || e.id === "e4")) isActive = true; // branches
               if (flowStep >= 4 && e.id === "e6") isActive = true; // lumenlog -> vortex
             } else {
-              // fallback (other nodes)
+              // fallback 
               isActive = isConnected;
             }
             return {
@@ -123,7 +123,7 @@ export default function SystemGraph({
               type: "animated",
               animated: false,
               data: {
-                active: isActive, // THIS is the key
+                active: isActive, 
               },
               style: {
                 stroke: isActive

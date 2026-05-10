@@ -57,10 +57,17 @@ export default function Navbar() {
 
         {/* LINKS */}
         <div className="flex items-center gap-8 text-base font-medium">
+
           {navItem("System", "/")}
-          {navItem("Projects", "/projects")}
+
           {navItem("Dashboard", "/dashboard")}
+
+          {navItem("Vortex", "/vortex")}
+
+          {navItem("Projects", "/projects")}
+
           {navItem("About", "/about")}
+
         </div>
       </div>
     </nav>

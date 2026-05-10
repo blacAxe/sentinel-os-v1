@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
-  // ✅ KEEP your mouse glow (unchanged)
   useEffect(() => {
     const move = (e: MouseEvent) => {
       document.documentElement.style.setProperty("--x", `${e.clientX - 300}px`);

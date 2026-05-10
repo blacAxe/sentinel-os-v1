@@ -18,7 +18,7 @@ export default function ProjectsPage() {
 
   const projectList = Object.entries(projects);
 
-  // FILTER (only change that matters)
+  // FILTER 
   const filteredProjects = activeNode
     ? projectList.filter(([key]) => key === activeNode)
     : projectList;

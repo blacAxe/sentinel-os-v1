@@ -158,16 +158,39 @@ func (a *App) Start() {
 		log.Fatal("Invalid IDP_URL:", err)
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(idpURL)
+	vortexRaw := os.Getenv("VORTEX_URL")
+
+	if vortexRaw == "" {
+		vortexRaw = "http://vortex:8080"
+	}
+
+	vortexURL, err := url.Parse(vortexRaw)
+
+	if err != nil {
+		log.Fatal("Invalid VORTEX_URL:", err)
+	}
+
+	idpProxy := httputil.NewSingleHostReverseProxy(idpURL)
+	vortexProxy := httputil.NewSingleHostReverseProxy(vortexURL)
 	mux := http.NewServeMux()
 
 	authHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		proxy.ServeHTTP(w, r)
+		idpProxy.ServeHTTP(w, r)
+	})
+
+	vortexHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		r.URL.Path = r.URL.Path[len("/vortex"):]
+
+		vortexProxy.ServeHTTP(w, r)
 	})
 
 	mux.Handle("/auth/", authHandler)
 	mux.Handle("/login/", authHandler)
 	mux.Handle("/register/", authHandler)
+
+	mux.Handle("/vortex/", middleware.JWTMiddleware(vortexHandler))
+
 	mux.Handle("/", authHandler)
 
 	mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {

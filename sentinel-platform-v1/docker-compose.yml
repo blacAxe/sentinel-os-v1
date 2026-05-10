@@ -33,6 +33,7 @@ services:
     environment:
       - IDP_URL=http://idp:8080
       - TARGET_URL=http://idp:8080
+      - VORTEX_URL=http://vortex:8080
     depends_on:
       - idp
     networks:
@@ -130,6 +131,20 @@ services:
       - KAFKA_BROKERS=redpanda:9092
     ports:
       - "7777:7777"
+    networks:
+      - sentinel-net
+
+  vortex:
+    build: ./vortex-java
+    container_name: vortex
+    ports:
+      - "8090:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/sentinel
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      - db
     networks:
       - sentinel-net
 
