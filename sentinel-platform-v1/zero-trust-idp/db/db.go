@@ -108,6 +108,34 @@ func CreateUser(username string) (*User, error) {
 	}, nil
 }
 
+func GetUserByID(id string) (*User, error) {
+	query := `SELECT id, username, credentials FROM users WHERE id=$1`
+
+	var username string
+	var credsJSON string
+	var userID int64
+
+	err := DB.QueryRow(query, id).Scan(&userID, &username, &credsJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	var creds []webauthn.Credential
+
+	if len(credsJSON) > 0 {
+		err := json.Unmarshal([]byte(credsJSON), &creds)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &User{
+		ID:          fmt.Sprintf("%d", userID),
+		Name:        username,
+		Credentials: creds,
+	}, nil
+}
+
 func SaveUser(u *User) error {
 	log.Println("SAVING USER WITH CREDS:", len(u.Credentials))
 
@@ -131,7 +159,7 @@ func CreateSession(userID int, hashedToken string, expiry time.Time) error {
 }
 
 func GetSession(hashedToken string) (string, error) {
-	query := `SELECT user_id FROM sessions WHERE refresh_token=$1 AND expires_at > NOW()`
+	query := `SELECT user_id FROM sessions WHERE refresh_token_hash=$1 AND expires_at > NOW()`
 
 	var userID string
 	err := DB.QueryRow(query, hashedToken).Scan(&userID)

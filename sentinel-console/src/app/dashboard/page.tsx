@@ -1,6 +1,6 @@
 "use client";
 
-import { login, getUserDataSafe as getUserData, logout, register } from "@/lib/api";
+import { login, getUserDataSafe as getUserData, logout, register, refreshAccessToken, } from "@/lib/api";
 import MouseGlow from "@/components/ui/MouseGlow";
 import { useState, useEffect } from "react";
 import SystemMetrics from "@/components/system/SystemMetrics";
@@ -32,13 +32,7 @@ export default function DashboardPage() {
       setFlowStep((prev) => (prev + 1) % 2);
     }, 6000);
 
-    const token = localStorage.getItem("sentinel_token");
-    const storedUser = localStorage.getItem("sentinel_user");
-
-    if (token && storedUser) {
-      setIsAuthenticated(true);
-      setUsername(storedUser);
-    }
+    bootstrapAuth();
 
     return () => {
       mounted = false;
@@ -115,8 +109,8 @@ export default function DashboardPage() {
       setAuthLoading(true);
       const data = await login(username);
 
-      if (data?.token) {
-        localStorage.setItem("sentinel_token", data.token);
+      if (data?.access_token) {
+        localStorage.setItem("sentinel_token", data.access_token);
         localStorage.setItem("sentinel_user", username);
       }
 
@@ -143,6 +137,7 @@ export default function DashboardPage() {
     setResponse("Logged out");
     addEvent(`Session cleared for ${username}`);
     setStatus("");
+    setUsername("bob");
   };
 
 const handleSimulateAttack = async () => {
@@ -166,6 +161,39 @@ const handleSimulateAttack = async () => {
     setResponse("❌ Connection failed.");
   } finally {
     setLoading(false);
+  }
+};
+
+const bootstrapAuth = async () => {
+  const token = localStorage.getItem("sentinel_token");
+  const storedUser = localStorage.getItem("sentinel_user");
+
+  if (!token || !storedUser) {
+    return;
+  }
+
+  try {
+    // Try protected request
+    await getUserData();
+
+    setIsAuthenticated(true);
+    setUsername(storedUser);
+
+  } catch {
+    try {
+      // Attempt silent refresh
+      await refreshAccessToken();
+
+      setIsAuthenticated(true);
+      setUsername(storedUser);
+
+    } catch {
+      // Fully expired session
+      localStorage.removeItem("sentinel_token");
+      localStorage.removeItem("sentinel_user");
+
+      setIsAuthenticated(false);
+    }
   }
 };
 
@@ -259,10 +287,10 @@ const handleSimulateAttack = async () => {
               <button
                 onClick={handleProtectedRequest}
                 disabled={!isAuthenticated}
-                className={`group relative overflow-hidden rounded-xl border p-5 text-left transition-all duration-300 ${
-                  isAuthenticated
-                    ? "border-emerald-500/20 hover:border-emerald-400/40 hover:bg-emerald-500/5"
-                    : "border-gray-700 text-gray-600 cursor-not-allowed"
+                className={`w-full p-3 rounded-xl outline-none border ${
+                  !isAuthenticated
+                    ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed"
+                    : "bg-gray-900/80 text-white border-white/5 hover:border-cyan-500"
                 }`}
               >
                 <div className="text-xs uppercase tracking-wide text-emerald-400 mb-2">
@@ -304,6 +332,7 @@ const handleSimulateAttack = async () => {
 
               <input
                 value={username}
+                disabled={isAuthenticated}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
                 className="w-full bg-gray-900/80 text-white p-3 rounded-xl outline-none border border-white/5 focus:border-cyan-500"
@@ -311,6 +340,7 @@ const handleSimulateAttack = async () => {
 
               <button
                 onClick={handleRegister}
+                disabled={isAuthenticated}
                 className="w-full bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded-xl transition font-semibold"
               >
                 Register Passkey

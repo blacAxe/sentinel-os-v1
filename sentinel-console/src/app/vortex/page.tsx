@@ -11,6 +11,7 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   async function fetchJobs() {
 
@@ -56,17 +57,23 @@ export default function Home() {
 
   useEffect(() => {
 
+  const token = localStorage.getItem("sentinel_token");
+
+  if (token) {
+    setIsAuthenticated(true);
+  }
+
+  fetchJobs();
+
+  const interval = setInterval(() => {
+
     fetchJobs();
 
-    const interval = setInterval(() => {
+  }, 10000);
 
-      fetchJobs();
+  return () => clearInterval(interval);
 
-    }, 10000);
-
-    return () => clearInterval(interval);
-
-  }, []);
+}, []);
 
   const sortedJobs = useMemo(() => {
 
@@ -281,6 +288,7 @@ export default function Home() {
 
                   <input
                     type="file"
+                    disabled={!isAuthenticated}
                     onChange={(e) => {
 
                       if (e.target.files) {
@@ -288,18 +296,31 @@ export default function Home() {
                         setFile(e.target.files[0]);
                       }
                     }}
-                    className="border border-zinc-700 rounded-lg p-3 flex-1"
+                    className={`border rounded-lg p-3 flex-1 ${
+                      !isAuthenticated
+                        ? "border-zinc-800 bg-zinc-900 text-zinc-600 cursor-not-allowed"
+                        : "border-zinc-700"
+                    }`}
                   />
 
                   <button
                     onClick={uploadFile}
-                    className="bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-zinc-200 transition"
+                    disabled={!isAuthenticated}
+                    className={`px-8 py-3 rounded-lg font-semibold transition ${
+                      !isAuthenticated
+                        ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                        : "bg-white text-black hover:bg-zinc-200"
+                    }`}
                   >
                     Upload
                   </button>
 
                 </div>
-
+                    {!isAuthenticated && (
+                      <p className="text-sm text-zinc-500 mt-4">
+                        Login required to submit files for scanning.
+                      </p>
+                    )}
               </div>
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
