@@ -143,21 +143,34 @@ export default function DashboardPage() {
 const handleSimulateAttack = async () => {
   setLoading(true);
   setResponse("🚀 Launching SQLi Attack...");
-  
+
   try {
-    // Send the attack to the root. The WAF should catch "UNION SELECT" 
-    // before the request even reaches the IDP.
-    const attackUrl = `http://localhost:8081/?attack=true&id=1' UNION SELECT NULL--`;
-    
-    const res = await fetch(attackUrl, { method: "GET" });
+    const token = localStorage.getItem("sentinel_token");
+
+    if (!token) {
+      setResponse("❌ No JWT found");
+      return;
+    }
+
+    const attackUrl =
+      "http://localhost:8081/?attack=true&id=1' UNION SELECT NULL--";
+
+    const res = await fetch(attackUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (res.status === 403) {
       setResponse("✅ Sentinel successfully blocked the attack!");
-      addEvent("Blocked SQL injection attempt");
+      addEvent(`Blocked SQL injection attempt for ${username}`);
     } else {
-      setResponse("❌ Attack Bypassed the Proxy. Status: " + res.status);
+      setResponse(
+        "❌ Attack bypassed proxy. Status: " + res.status
+      );
     }
-  } catch (err) {
+  } catch {
     setResponse("❌ Connection failed.");
   } finally {
     setLoading(false);

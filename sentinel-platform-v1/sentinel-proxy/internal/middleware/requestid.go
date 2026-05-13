@@ -16,9 +16,13 @@ func RequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
 
-		reqCtx := &authctx.RequestContext{
-			RequestID: id,
+		reqCtx, ok := authctx.GetRequestContext(r.Context())
+
+		if !ok || reqCtx == nil {
+			reqCtx = &authctx.RequestContext{}
 		}
+
+		reqCtx.RequestID = id
 
 		ctx := authctx.SetRequestContext(r.Context(), reqCtx)
 

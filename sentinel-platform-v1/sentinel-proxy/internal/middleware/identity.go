@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -30,9 +31,17 @@ func Identity(next http.Handler) http.Handler {
 			authHeader = after
 		}
 
+		log.Printf("AUTH HEADER: %s", authHeader)
+
 		// validate token
 		if authHeader != "" {
-			if username, err := auth.DecodeUsernameFromToken(authHeader); err == nil {
+			username, err := auth.DecodeUsernameFromToken(authHeader)
+
+			if err != nil {
+				log.Printf("JWT DECODE ERROR: %v", err)
+			} else {
+				log.Printf("JWT USERNAME: %s", username)
+
 				userID = username
 				authenticated = true
 			}

@@ -10,6 +10,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - sentinel-net
 
@@ -21,9 +26,15 @@ services:
     environment:
       - DB_URL=postgres://postgres:postgres@db:5432/sentinel?sslmode=disable
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - sentinel-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   proxy:
     build: ./sentinel-proxy
@@ -35,7 +46,8 @@ services:
       - TARGET_URL=http://idp:8080
       - VORTEX_URL=http://vortex:8080
     depends_on:
-      - idp
+      idp:
+        condition: service_healthy
     networks:
       - sentinel-net
 
@@ -58,6 +70,11 @@ services:
       - "9644:9644"
     networks:
       - sentinel-net
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q Healthy"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
   clickhouse:
     image: clickhouse/clickhouse-server:23.8
@@ -78,10 +95,10 @@ services:
   topic-init:
     image: docker.redpanda.com/redpandadata/redpanda:v24.1.7
     depends_on:
-      - redpanda
+      redpanda:   
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      sleep 10 &&
       rpk topic create logs-raw --brokers=redpanda:9092;
       rpk topic create security-events --brokers=redpanda:9092;
       "
@@ -94,9 +111,12 @@ services:
       dockerfile: ./cmd/ingestor/Dockerfile
     container_name: lumen-ingestor
     depends_on:
-      - redpanda
-      - clickhouse
-      - topic-init
+      redpanda:
+        condition: service_healthy
+      clickhouse:
+        condition: service_started
+      topic-init:
+        condition: service_completed_successfully
     environment:
       - KAFKA_BROKERS=redpanda:9092
       - CLICKHOUSE_ADDR=clickhouse:9000
@@ -112,8 +132,10 @@ services:
       dockerfile: ./cmd/alerter/Dockerfile
     container_name: lumen-alerter
     depends_on:
-      - redpanda
-      - topic-init
+      redpanda:
+        condition: service_healthy
+      topic-init:
+        condition: service_completed_successfully
     environment:
       - KAFKA_BROKERS=redpanda:9092
       - DISCORD_WEBHOOK=${DISCORD_WEBHOOK}
@@ -126,7 +148,8 @@ services:
       dockerfile: ./agent/Dockerfile
     container_name: lumen-agent
     depends_on:
-      - redpanda
+      redpanda:
+        condition: service_healthy
     environment:
       - KAFKA_BROKERS=redpanda:9092
     ports:
@@ -144,9 +167,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - sentinel-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 networks:
   sentinel-net:

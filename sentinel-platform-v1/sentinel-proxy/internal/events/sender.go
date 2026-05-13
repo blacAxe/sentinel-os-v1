@@ -33,5 +33,11 @@ func SendEvent(event Event) {
 
 	defer resp.Body.Close()
 
-	log.Printf("Event shipped to Rust agent for user:")
+	log.Printf(
+		"event shipped type=%s request_id=%s user=%s source=%s",
+		event.Type,
+		event.RequestID,
+		event.UserID,
+		event.Source,
+	)
 }

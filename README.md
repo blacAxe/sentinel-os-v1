@@ -209,6 +209,22 @@ Example protected route response for authorized admin users.
 
 ---
 
+## Engineering Concepts Explored
+
+- Zero-trust inspired authentication flows
+- Distributed event-driven architecture
+- Reverse proxy request processing
+- WAF request inspection and blocking
+- JWT propagation across services
+- RBAC authorization enforcement
+- Kafka-based telemetry pipelines
+- Service-to-service communication
+- Distributed worker orchestration
+- Real-time frontend observability
+- Containerized infrastructure workflows
+
+---
+
 ## Tech Stack
 
 ### Backend
@@ -235,12 +251,22 @@ Example protected route response for authorized admin users.
 
 ---
 
+## Requirements
+
+- Docker + Docker Compose
+- Node.js 20+
+- npm
+- Java 2x
+- Go 1.24+
+
+---
+
 ## Running the Project
 
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/blacAxe/sentinel-os-v1.git
 cd sentinel-os-v1
 ```
 
@@ -260,19 +286,22 @@ npm run dev
 
 ---
 
-## Development Goals
+## Demo Accounts
 
-Current focus areas:
+| Username | Role  |
+|----------|-------|
+| bob      | admin |
+| jon      | user  |
 
-- Improved observability metrics
-- Better Kafka event visualization
-- Expanded WAF rules
-- Refresh token lifecycle management
-- Centralized logging
-- Infrastructure hardening
-- Better service health monitoring
-- Distributed scan workers
-- Live VORTEX event streaming
+--- 
+
+## Future Exploration Areas
+
+- OpenTelemetry tracing
+- Kubernetes orchestration
+- Advanced distributed workers
+- Expanded telemetry analytics
+- Infrastructure scalability experiments
 
 ---
 
@@ -311,6 +340,8 @@ sentinel-os-v1/
 
 This project is actively evolving and intentionally experimental in some areas.
 
+The architecture intentionally prioritizes learning real backend communication patterns and operational workflows over framework-heavy abstraction.
+
 The goal is not just building features, but understanding:
 - distributed system design
 - authentication internals
@@ -323,3 +354,10 @@ The goal is not just building features, but understanding:
 - real-world debugging workflows
 
 A large part of this repository is dedicated to learning by building systems end-to-end rather than isolated tutorials.
+
+## Current Limitations
+
+- Observability stack is still evolving
+- Kubernetes deployment is not yet implemented
+- WAF rules are intentionally simplified
+- Some services are optimized for experimentation over production scalability

@@ -80,6 +80,10 @@ func main() {
 	// Protected Route
 	mux.HandleFunc("/api/secret-data", handlers.JWTMiddleware(secretHandler))
 
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	})
 	// Serve frontend (index.html) at root
 	mux.Handle("/", fileServer)
 

@@ -7,17 +7,40 @@ type contextKey string
 const RequestContextKey contextKey = "request_context"
 
 type RequestContext struct {
-	RequestID     string
+	RequestID string
+
 	UserID        string
 	Authenticated bool
-	IPAddress     string
+
+	IPAddress string
+
+	Method string
+	Path   string
+	Query  string
+	Host   string
+
+	UserAgent string
+	Referer   string
 }
 
-func SetRequestContext(ctx context.Context, reqCtx *RequestContext) context.Context {
-	return context.WithValue(ctx, RequestContextKey, reqCtx)
+func SetRequestContext(
+	ctx context.Context,
+	reqCtx *RequestContext,
+) context.Context {
+	return context.WithValue(
+		ctx,
+		RequestContextKey,
+		reqCtx,
+	)
 }
 
-func GetRequestContext(ctx context.Context) (*RequestContext, bool) {
-	reqCtx, ok := ctx.Value(RequestContextKey).(*RequestContext)
+func GetRequestContext(
+	ctx context.Context,
+) (*RequestContext, bool) {
+
+	reqCtx, ok := ctx.Value(
+		RequestContextKey,
+	).(*RequestContext)
+
 	return reqCtx, ok
 }
