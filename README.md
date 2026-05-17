@@ -283,6 +283,58 @@ cd sentinel-console
 npm install
 npm run dev
 ```
+--- 
+
+## Development Workflow
+
+A root Makefile is included to simplify local development and service orchestration.
+
+### Start backend services with live logs
+
+```bash
+make backend
+```
+
+### Start frontend development server
+
+```bash
+make frontend
+```
+
+### View all backend logs
+
+```bash
+make logs
+```
+
+### View specific service logs
+
+```bash
+make proxy-logs
+make vortex-logs
+make lumen-logs
+make idp-logs
+```
+
+### Stop all services
+
+```bash
+make down
+```
+
+### Remove containers and volumes
+
+```bash
+make clean
+```
+
+### Check running services
+
+```bash
+make status
+```
+
+This workflow was added to make debugging distributed services and infrastructure interactions easier during development.
 
 ---
 
@@ -298,6 +350,7 @@ npm run dev
 ## Future Exploration Areas
 
 - OpenTelemetry tracing
+- Kubernetes deployment manifests
 - Kubernetes orchestration
 - Advanced distributed workers
 - Expanded telemetry analytics
@@ -358,6 +411,6 @@ A large part of this repository is dedicated to learning by building systems end
 ## Current Limitations
 
 - Observability stack is still evolving
-- Kubernetes deployment is not yet implemented
+- Kubernetes manifests exist but orchestration is still experimental
 - WAF rules are intentionally simplified
 - Some services are optimized for experimentation over production scalability
