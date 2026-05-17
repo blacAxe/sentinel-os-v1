@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\k8s\kompose.exe convert
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: alerter
+  name: alerter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: alerter
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\k8s\kompose.exe convert
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: alerter
+    spec:
+      containers:
+        - env:
+            - name: DISCORD_WEBHOOK
+              value: https://discord.com/api/webhooks/1500519975360663584/io7M4tjtD20AqG9l7WiA0_GIX3T-VsCTt4DvL679mOTHyBhVHVuoUW9iTm7Ff-T4Zl-Q
+            - name: KAFKA_BROKERS
+              value: redpanda:9092
+          image: sentinel-platform-v1-alerter
+          name: lumen-alerter
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always

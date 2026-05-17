@@ -152,8 +152,12 @@ const handleSimulateAttack = async () => {
       return;
     }
 
+    const payload = encodeURIComponent(
+      "1' union select null--"
+    );
+
     const attackUrl =
-      "http://localhost:8081/?attack=true&id=1' UNION SELECT NULL--";
+      `http://localhost:8081/?attack=true&id=${payload}`;
 
     const res = await fetch(attackUrl, {
       method: "GET",

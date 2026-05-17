@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\k8s\kompose.exe convert
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: proxy
+  name: proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: proxy
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\k8s\kompose.exe convert
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: proxy
+    spec:
+      containers:
+        - env:
+            - name: IDP_URL
+              value: http://idp:8080
+            - name: TARGET_URL
+              value: http://idp:8080
+            - name: VORTEX_URL
+              value: http://vortex:8080
+          image: sentinel-platform-v1-proxy
+          name: sentinel-proxy
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+      restartPolicy: Always

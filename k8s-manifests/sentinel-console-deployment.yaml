@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\k8s\kompose.exe convert
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: sentinel-console
+  name: sentinel-console
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: sentinel-console
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\k8s\kompose.exe convert
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: sentinel-console
+    spec:
+      containers:
+        - env:
+            - name: NODE_ENV
+              value: production
+
+            - name: CLICKHOUSE_URL
+              value: http://clickhouse:8123
+
+            - name: CLICKHOUSE_USER
+              value: default
+
+            - name: CLICKHOUSE_PASSWORD
+              value: lumenlog2026
+
+          image: sentinel-frontend
+          name: sentinel-console
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+      restartPolicy: Always

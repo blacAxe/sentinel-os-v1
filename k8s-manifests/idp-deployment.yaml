@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\k8s\kompose.exe convert
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: idp
+  name: idp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: idp
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\k8s\kompose.exe convert
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: idp
+    spec:
+      containers:
+        - env:
+            - name: DB_URL
+              value: postgres://postgres:postgres@db:5432/sentinel?sslmode=disable
+          image: sentinel-platform-v1-idp
+          livenessProbe:
+            exec:
+              command:
+                - wget
+                - --spider
+                - -q
+                - http://localhost:8080/health
+            failureThreshold: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: idp
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      restartPolicy: Always

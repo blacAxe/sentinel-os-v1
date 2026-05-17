@@ -45,6 +45,7 @@ services:
       - IDP_URL=http://idp:8080
       - TARGET_URL=http://idp:8080
       - VORTEX_URL=http://vortex:8080
+      - DISCORD_WEBHOOK=${DISCORD_WEBHOOK}
     depends_on:
       idp:
         condition: service_healthy

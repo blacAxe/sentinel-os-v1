@@ -1,11 +1,7 @@
 target/
 uploads/
 
-*.txt
-*.pdf
-
-.mvn/
-mvnw*
+.mvn/wrapper/maven-wrapper.jar
 
 .vscode/
 .idea/

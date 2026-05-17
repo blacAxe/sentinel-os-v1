@@ -1,0 +1,1 @@
+powershell Invoke-Expression cmd.exe UNION SELECT

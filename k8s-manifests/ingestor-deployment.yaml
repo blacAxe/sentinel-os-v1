@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\k8s\kompose.exe convert
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: ingestor
+  name: ingestor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: ingestor
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\k8s\kompose.exe convert
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: ingestor
+    spec:
+      containers:
+        - env:
+            - name: CLICKHOUSE_ADDR
+              value: clickhouse:9000
+            - name: CLICKHOUSE_DB
+              value: lumen_db
+            - name: CLICKHOUSE_PASSWORD
+              value: lumenlog2026
+            - name: CLICKHOUSE_USER
+              value: default
+            - name: KAFKA_BROKERS
+              value: redpanda:9092
+          image: sentinel-platform-v1-ingestor
+          name: lumen-ingestor
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always

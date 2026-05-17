@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  init.sql: "-- Create Users Table\nCREATE TABLE IF NOT EXISTS users (\n    id SERIAL PRIMARY KEY,\n    username TEXT UNIQUE NOT NULL,\n    credentials JSONB DEFAULT '[]',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP\n);\n\n-- Create Sessions Table\nCREATE TABLE IF NOT EXISTS sessions (\n    id SERIAL PRIMARY KEY,\n    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,\n    refresh_token_hash TEXT UNIQUE NOT NULL,\n    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP\n);\n\n-- OPTIONAL: Seed an initial user if you want to test login immediately\n-- Note: Since this is WebAuthn, 'bob' would still need to register his passkey \n-- through the UI first for 'credentials' to be populated.\nINSERT INTO users (username) VALUES ('bob') ON CONFLICT DO NOTHING;"
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: db
+  name: db-cm1
