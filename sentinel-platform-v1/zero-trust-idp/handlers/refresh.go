@@ -7,7 +7,7 @@ import (
 )
 
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
-	// Get refresh token from cookie
+
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		http.Error(w, "Missing refresh token", http.StatusBadRequest)
@@ -16,10 +16,9 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken := cookie.Value
 
-	// Hash it 
+
 	hashed := HashToken(refreshToken)
 
-	// Check DB for valid session
 	userID, err := db.GetSession(hashed)
 	if err != nil {
 		http.Error(w, "Invalid or expired refresh token", http.StatusUnauthorized)
@@ -57,7 +56,6 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   900,
 	})
 
-	// Return new access token
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{
 		"access_token": "` + newAccessToken + `"

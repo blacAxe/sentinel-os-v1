@@ -20,7 +20,6 @@ func CheckAlerts() {
 
 	blockRate := float64(stats.Blocked) / float64(stats.Total) * 100
 
-	// cooldown (don’t spam alerts)
 	if time.Since(lastAlertTime) < 10*time.Second {
 		return
 	}
@@ -35,6 +34,6 @@ func CheckAlerts() {
 	}
 
 	if stats.Total > 20 && blockRate > 30 {
-		return // avoid noise
+		return
 	}
 }

@@ -1,12 +1,9 @@
-// /src/lib/api.ts 
-
 const IDP_URL =
   process.env.NEXT_PUBLIC_IDP_URL || "http://localhost:8081";
 
 const PROXY_URL =
   process.env.NEXT_PUBLIC_PROXY_URL || "http://localhost:8081";
 
-// prevent spam / duplicate calls
 let inFlightUserRequest: Promise<string> | null = null;
 let lastRateLimitTime = 0;
 
@@ -41,7 +38,6 @@ function getCookie(name: string): string | undefined {
 }
 
 export async function register(username: string) {
-  // Get Registration Options from Go Backend
   const beginRes = await fetch(`${IDP_URL}/register/begin?username=${username}`);
   if (!beginRes.ok) {
     const errorMsg = await beginRes.text();
@@ -50,8 +46,6 @@ export async function register(username: string) {
 
   const options = await beginRes.json();
 
-  // Trigger Browser WebAuthn API
-  // must convert base64 strings from Go into Uint8Arrays for the browser
   options.publicKey.challenge = base64ToUint8Array(options.publicKey.challenge);
   options.publicKey.user.id = base64ToUint8Array(options.publicKey.user.id);
 
@@ -59,7 +53,6 @@ export async function register(username: string) {
     publicKey: options.publicKey,
   }) as PublicKeyCredential;
 
-  // Send the hardware response back to Go Backend
   const response = {
     id: credential.id,
     rawId: bufferToBase64Url(credential.rawId),
@@ -83,17 +76,14 @@ export async function register(username: string) {
   return await finishRes.text();
 }
 
-// --- AUTH ---
 export async function login(username: string) {
   try {
-    // Begin Login - Ask the server for WebAuthn options
     const beginRes = await fetch(`${IDP_URL}/login/begin?username=${username}`, {
       method: "GET",
       credentials: "include",
     });
 
     if (!beginRes.ok) {
-      // Capture the actual error message from the Go server (e.g., "User not found")
       const errorMsg = await beginRes.text();
       console.error("IDP Login Begin Error:", errorMsg);
       throw new Error(`Login begin failed: ${errorMsg}`);
@@ -107,7 +97,6 @@ export async function login(username: string) {
 
     const publicKey = options.publicKey;
 
-    // Convert Base64 strings from server into Uint8Arrays for the browser API
     publicKey.challenge = base64ToUint8Array(publicKey.challenge);
 
     if (publicKey.allowCredentials) {
@@ -119,7 +108,6 @@ export async function login(username: string) {
 
     console.log("FINAL PUBLIC KEY:", publicKey);
 
-    // Trigger the Browser/FaceID/Fingerprint prompt
     const cred = await navigator.credentials.get({
       publicKey,
     }) as PublicKeyCredential | null;
@@ -130,7 +118,6 @@ export async function login(username: string) {
 
     const authResponse = cred.response as AuthenticatorAssertionResponse;
 
-    // Finish Login - Send the signed challenge back to the server
     const finishRes = await fetch(
       `${IDP_URL}/login/finish?username=${username}`,
       {
@@ -139,7 +126,6 @@ export async function login(username: string) {
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          // Including CSRF token if available in cookies
           "X-CSRF-Token": typeof document !== "undefined" ? getCookie("csrf_token") || "" : "",
         },
         body: JSON.stringify({
@@ -165,7 +151,6 @@ export async function login(username: string) {
 
     const data = await finishRes.json();
 
-    // Store the tokens
     if (data.access_token) {
       localStorage.setItem("sentinel_token", data.access_token);
     }
@@ -181,8 +166,6 @@ export async function login(username: string) {
     throw err;
   }
 }
-
-// --- PROXY REQUESTS ---
 
 export async function getUserDataSafe(): Promise<string> {
   if (inFlightUserRequest) {
@@ -254,10 +237,7 @@ export async function getUserDataSafe(): Promise<string> {
   return requestPromise;
 }
 
-// backward compatibility
 export const getUserData = getUserDataSafe;
-
-// --- REFRESH ---
 
 export async function refreshAccessToken(): Promise<string> {
   const refreshToken = localStorage.getItem("sentinel_refresh_token")
@@ -291,8 +271,6 @@ export async function refreshAccessToken(): Promise<string> {
 
   return data.access_token;
 }
-
-// --- LOGOUT ---
 
 export async function logout() {
   const refreshToken = localStorage.getItem("sentinel_refresh_token");

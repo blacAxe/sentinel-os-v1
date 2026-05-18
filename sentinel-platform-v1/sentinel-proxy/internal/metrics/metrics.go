@@ -9,24 +9,19 @@ import (
 
 var mu sync.Mutex
 
-// Core counters
 var Total int
 var Blocked int
 var Allowed int
 
-// Analytics maps
 var attackCounts = make(map[string]int)
 var ipCounts = make(map[string]int)
 var requestTimeline = make(map[int64]int)
 
-// Struct for clean stats response
 type Stats struct {
 	Total   int `json:"total"`
 	Blocked int `json:"blocked"`
 	Allowed int `json:"allowed"`
 }
-
-// ===== Counters =====
 
 func IncTotal() {
 	mu.Lock()
@@ -46,7 +41,6 @@ func IncAllowed() {
 	Allowed++
 }
 
-// ===== Stats =====
 
 func GetStats() Stats {
 	mu.Lock()
@@ -58,8 +52,6 @@ func GetStats() Stats {
 		Allowed: Allowed,
 	}
 }
-
-// ===== Analytics =====
 
 func IncAttack(attackType string) {
 	if attackType == "" {
@@ -123,7 +115,6 @@ func GetTimeline() map[int64]int {
 	mu.Lock()
 	defer mu.Unlock()
 
-	// return a copy
 	copy := make(map[int64]int)
 	for k, v := range requestTimeline {
 		copy[k] = v
@@ -135,7 +126,6 @@ func ProcessEvent(e events.Event) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	// Core counters
 	Total++
 
 	if e.Action == "blocked" {
@@ -146,7 +136,6 @@ func ProcessEvent(e events.Event) {
 		Allowed++
 	}
 
-	// Analytics
 	if e.Metadata["attack_type"] != "" {
 		attackCounts[e.Metadata["attack_type"]]++
 	}

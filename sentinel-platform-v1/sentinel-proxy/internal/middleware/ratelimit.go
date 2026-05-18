@@ -87,7 +87,6 @@ func RateLimiter(next http.Handler) http.Handler {
 			)
 
 			telemetry.Emit(event)
-			// ---------------------
 
 			http.Error(w, "Too many requests", http.StatusTooManyRequests)
 			return

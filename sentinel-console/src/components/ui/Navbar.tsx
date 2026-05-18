@@ -8,7 +8,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
-  // detect scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);

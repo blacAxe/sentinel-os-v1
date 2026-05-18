@@ -21,7 +21,6 @@ var producer *kafka.Producer
 func main() {
 	ctx := context.Background()
 
-	// Setup ClickHouse Connection
 	conn, err := clickhouse.Open(&clickhouse.Options{
 		Addr: []string{"clickhouse:9000"},
 		Auth: clickhouse.Auth{
@@ -47,14 +46,12 @@ func main() {
 		time.Sleep(2 * time.Second)
 	}
 
-	// Setup Kafka Producer
 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "redpanda:9092"})
 	if err != nil {
 		log.Fatalf("Failed to create Kafka producer: %v", err)
 	}
 	producer = p
 
-	// Setup Kafka Consumer
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "redpanda:9092",
 		"group.id":          "lumen-ingestor",
@@ -86,13 +83,13 @@ func main() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
-	// --- BATCHING LOGIC ---
-	const batchSize = 1 // Set to 1 for immediate dashboard updates
+
+	const batchSize = 1 
 	var count int
 
 	batch, err := conn.PrepareBatch(ctx, "INSERT INTO lumen_db.logs")
 	if err != nil {
-		// Wait for ClickHouse to initialize the table if it's not ready
+
 		for {
 			batch, err = conn.PrepareBatch(ctx, "INSERT INTO lumen_db.logs")
 			if err == nil {
@@ -126,7 +123,6 @@ func main() {
 					continue
 				}
 
-				// Append log to ClickHouse batch
 				err := batch.Append(
 					logData.GetServiceName(),
 					logData.GetHost(),
@@ -147,7 +143,6 @@ func main() {
 						fmt.Printf("ClickHouse Batch Send Error: %v\n", err)
 					}
 
-					// Re-prepare batch for next set of logs
 					batch, _ = conn.PrepareBatch(ctx, "INSERT INTO lumen_db.logs")
 					count = 0
 				}

@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 )
 
-// GenerateIdPKeys creates a 2048-bit RSA key pair for signing JWTs
 func GenerateIdPKeys() (*rsa.PrivateKey, error) {
 	reader := rand.Reader
 	bitSize := 2048

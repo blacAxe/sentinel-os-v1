@@ -21,7 +21,6 @@ export default function SystemMetrics({ active }: { active?: boolean }) {
 
         if (!isMounted) return;
 
-        // Map Go backend metrics to React state
         setRequests(data.total || 0);
         setBlocked(data.blocked || 0);
         setAllowed(data.allowed || 0);

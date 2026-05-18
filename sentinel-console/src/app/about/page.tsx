@@ -16,7 +16,6 @@ export default function AboutPage() {
 
   const refs = useRef<Record<string, HTMLElement | null>>({});
 
-  // ================= SECTION TRACKING =================
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -24,7 +23,6 @@ export default function AboutPage() {
           if (entry.isIntersecting) {
             setActive(entry.target.id);
 
-            // trigger timeline animation when entering timeline
             if (entry.target.id === "timeline") {
               setTimelineStep(0);
             }
@@ -41,7 +39,6 @@ export default function AboutPage() {
     return () => observer.disconnect();
   }, []);
 
-  // ================= TIMELINE ANIMATION =================
   useEffect(() => {
     if (active !== "timeline") return;
 
@@ -60,7 +57,6 @@ export default function AboutPage() {
     return () => clearInterval(interval);
   }, [active]);
 
-  // ================= SCROLL TO SECTION =================
   const scrollTo = (id: string) => {
     refs.current[id]?.scrollIntoView({ behavior: "smooth" });
   };

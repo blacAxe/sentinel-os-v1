@@ -15,7 +15,6 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	// Load WAF rules
 	rules.LoadRules()
 
 	app := proxy.NewApp()

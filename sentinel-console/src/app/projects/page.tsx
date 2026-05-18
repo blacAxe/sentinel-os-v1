@@ -17,13 +17,11 @@ export default function ProjectsPage() {
   const activeNode = searchParams.get("node");
 
   const projectList = Object.entries(projects);
-
-  // FILTER 
+ 
   const filteredProjects = activeNode
     ? projectList.filter(([key]) => key === activeNode)
     : projectList;
 
-  // staggered entrance trigger
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(t);
@@ -35,10 +33,8 @@ export default function ProjectsPage() {
     if (filteredProjects.length === 1) {
       const [key] = filteredProjects[0];
 
-      // highlight first
       setHighlightedProject(key);
 
-      // then open panel after delay
       const t = setTimeout(() => {
         setActiveProject(key);
         setHighlightedProject(null); 
@@ -48,14 +44,13 @@ export default function ProjectsPage() {
     }
   }, [activeNode]);
 
-  // system color mapping
   const getColor = (key: string) => {
-    if (key.includes("idp")) return "#60a5fa"; // identity
+    if (key.includes("idp")) return "#60a5fa"; 
     if (key.includes("sentinel") || key.includes("kernel") || key.includes("lab"))
-      return "#f87171"; // security
-    if (key.includes("lumen")) return "#c084fc"; // observability
-    if (key.includes("cracker")) return "#facc15"; // distributed
-    if (key.includes("vortex")) return "#9ca3af"; // system
+      return "#f87171";
+    if (key.includes("lumen")) return "#c084fc";
+    if (key.includes("cracker")) return "#facc15";
+    if (key.includes("vortex")) return "#9ca3af";
     return "#60a5fa";
   };
 
@@ -75,7 +70,7 @@ export default function ProjectsPage() {
           Systems, security infrastructure, and distributed architectures
         </p>
 
-        {/* ✅ FILTER INDICATOR (non-invasive) */}
+        {/* FILTER INDICATOR (non-invasive) */}
         {activeNode && (
           <div className="mt-3 text-sm text-blue-400">
             Showing: {activeNode}

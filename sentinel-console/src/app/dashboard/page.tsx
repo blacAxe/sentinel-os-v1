@@ -190,7 +190,6 @@ const bootstrapAuth = async () => {
   }
 
   try {
-    // Try protected request
     await getUserData();
 
     setIsAuthenticated(true);
@@ -198,14 +197,12 @@ const bootstrapAuth = async () => {
 
   } catch {
     try {
-      // Attempt silent refresh
       await refreshAccessToken();
 
       setIsAuthenticated(true);
       setUsername(storedUser);
 
     } catch {
-      // Fully expired session
       localStorage.removeItem("sentinel_token");
       localStorage.removeItem("sentinel_user");
 

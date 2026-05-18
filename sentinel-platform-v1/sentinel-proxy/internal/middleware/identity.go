@@ -18,7 +18,6 @@ func Identity(next http.Handler) http.Handler {
 
 		authHeader := r.Header.Get("Authorization")
 
-		// fallback to cookie auth
 		if authHeader == "" {
 			cookie, err := r.Cookie("access_token")
 			if err == nil {
@@ -26,14 +25,12 @@ func Identity(next http.Handler) http.Handler {
 			}
 		}
 
-		// remove Bearer prefix
 		if after, ok := strings.CutPrefix(authHeader, "Bearer "); ok {
 			authHeader = after
 		}
 
 		log.Printf("AUTH HEADER: %s", authHeader)
 
-		// validate token
 		if authHeader != "" {
 			username, err := auth.DecodeUsernameFromToken(authHeader)
 

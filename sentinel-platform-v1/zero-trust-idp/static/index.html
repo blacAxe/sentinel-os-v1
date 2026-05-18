@@ -41,14 +41,11 @@
             const username = document.getElementById('username').value;
             if (!username) return alert("Enter a username");
 
-            // Get options from Go server
             const response = await fetch(`/register/begin?username=${username}`);
             const options = await response.json();
 
-            // Trigger Biometric/Security Key prompt
             const credential = await webauthnJSON.create(options);
 
-            // Send back to server
             const finish = await fetch(`/register/finish?username=${username}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -66,7 +63,6 @@
                 const response = await fetch(`/login/begin?username=${username}`);
                 const options = await response.json();
 
-                // THIS is what worked before
                 const assertion = await webauthnJSON.get(options);
 
                 const finish = await fetch(`/login/finish?username=${username}`, {
@@ -100,7 +96,6 @@
             }
         }
 
-        // Function to test the Protected Route directly from the browser
         async function fetchSecretData() {
             const token = localStorage.getItem("jwt_token");
             

@@ -26,8 +26,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// SUBSCRIBE TO BOTH TOPICS
-	// 'logs-raw' for standard app logs, 'security-events' for your Rust Agent
 	err = c.SubscribeTopics([]string{"logs-raw", "security-events"}, nil)
 	if err != nil {
 		log.Fatalf("Failed to subscribe to topics: %v", err)
@@ -45,16 +43,12 @@ func main() {
 		case *kafka.Message:
 			logData := &pb.LogEvent{}
 
-			// UNMARSHAL PROTOBUF
-			// This is where the Rust binary data becomes a Go struct
 			err := proto.Unmarshal(e.Value, logData)
 			if err != nil {
 				log.Printf("Error decoding message from %s: %v", *e.TopicPartition.Topic, err)
 				continue
 			}
 
-			// BROAD ALERT LOGIC
-			// Fire if it's from the security-events topic OR if the level is SECURITY
 			if *e.TopicPartition.Topic == "security-events" || logData.GetLevel() == "SECURITY" || logData.GetAttackType() != "" {
 				log.Printf("🚨 Security Event Detected for User: %s", logData.GetUserId())
 				sendToDiscord(logData)
@@ -64,16 +58,15 @@ func main() {
 }
 
 func sendToDiscord(event *pb.LogEvent) {
-	// Fallback for user if it's empty
+
 	user := event.GetUserId()
 	if user == "" {
 		user = "anonymous"
 	}
 
-	// Format timestamp correctly (handling both Unix seconds and nanoseconds)
 	ts := event.GetTimestamp()
 	var timeStr string
-	if ts > 1000000000000 { // Likely nanoseconds
+	if ts > 1000000000000 { 
 		timeStr = time.Unix(0, ts).Format(time.RFC1123)
 	} else {
 		timeStr = time.Unix(ts, 0).Format(time.RFC1123)

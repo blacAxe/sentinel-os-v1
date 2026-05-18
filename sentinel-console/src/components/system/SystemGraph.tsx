@@ -19,7 +19,6 @@ const edgeTypes = {
   animated: AnimatedEdge,
 };
 
-// STATIC NODES (NO PHYSICS)
 const initialNodes: Node[] = [
   { id: "idp", position: { x: 100, y: 200 }, type: "custom", data: { label: "Identity Provider", type: "identity" } },
   { id: "sentinel", position: { x: 350, y: 200 }, type: "custom", data: { label: "Sentinel Proxy", type: "security" } },
@@ -31,7 +30,6 @@ const initialNodes: Node[] = [
   { id: "cracker", position: { x: 650, y: 400 }, type: "custom", data: { label: "Distributed Cracker", type: "distributed" } },
 ];
 
-// STATIC EDGES
 const baseEdges: Edge[] = [
   { id: "e1", source: "idp", target: "sentinel" },
   { id: "e2", source: "sentinel", target: "lumenlog" },
@@ -56,7 +54,7 @@ export default function SystemGraph({
 
     const interval = setInterval(() => {
       if (!isHovering) {
-        setFlowStep(0); // reset before switching
+        setFlowStep(0); 
         setActiveNode(order[i]);
         i = (i + 1) % order.length;
       }
@@ -106,7 +104,6 @@ export default function SystemGraph({
             const isConnected =
               e.source === activeNode || e.target === activeNode;
 
-            // staged activation rules
             let isActive = false;
 
             if (activeNode === "sentinel") {
@@ -115,7 +112,6 @@ export default function SystemGraph({
               if (flowStep >= 3 && (e.id === "e3" || e.id === "e4")) isActive = true; // branches
               if (flowStep >= 4 && e.id === "e6") isActive = true; // lumenlog -> vortex
             } else {
-              // fallback 
               isActive = isConnected;
             }
             return {
@@ -150,10 +146,9 @@ export default function SystemGraph({
 
           proOptions={{ hideAttribution: true }}
 
-          // HOVER = GROUPING EFFECT
           onNodeMouseEnter={(_, node) => {
             setIsHovering(true);
-            setFlowStep(0); // reset HERE instead
+            setFlowStep(0);
             setActiveNode(node.id);
           }}
 
@@ -162,7 +157,6 @@ export default function SystemGraph({
             setActiveNode(null);
           }}
 
-          // CLICK = ACTION
           onNodeClick={(_, node) => {
             setActiveNode(node.id);
             onNodeClick(node.id);

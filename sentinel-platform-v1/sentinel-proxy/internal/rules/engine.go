@@ -58,12 +58,12 @@ func EvaluateRequest(r *http.Request, query string) (bool, string) {
 		case "path":
 			target = path
 		default:
-			target = query // fallback
+			target = query
 		}
 
 		matched, err := regexp.MatchString(rule.Pattern, target)
 		if err != nil {
-			continue // skip bad regex instead of crashing
+			continue
 		}
 
 		if matched {

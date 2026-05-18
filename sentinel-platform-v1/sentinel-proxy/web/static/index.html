@@ -124,13 +124,11 @@
                     return res.json();
                 })
                 .then(data => {
-                    // main metrics
                     document.getElementById('total').innerText = data.total;
                     document.getElementById('allowed').innerText = data.allowed;
                     document.getElementById('blocked').innerText = data.blocked;
                     updateChart(data.timeline);
 
-                    // block rate
                     const rate = data.total > 0 
                         ? (data.blocked / data.total * 100).toFixed(1)
                         : 0;
@@ -178,7 +176,6 @@
                 chart.update();
             }
         }
-        // refresh every second
         setInterval(fetchStats, 1000);
     </script>
 </body>

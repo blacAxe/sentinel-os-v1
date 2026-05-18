@@ -6,7 +6,6 @@ func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
-		// Only set if not already set by another middleware or the target
 		if w.Header().Get("Access-Control-Allow-Origin") == "" {
 			if origin == "http://localhost:3000" {
 				w.Header().Set("Access-Control-Allow-Origin", origin)

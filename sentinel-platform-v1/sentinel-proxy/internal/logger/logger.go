@@ -62,7 +62,6 @@ func Log(entry LogEntry) {
 		log.Println("DB insert error:", err)
 	}
 
-	// send to dashboard
 	select {
 	case LogChan <- msg:
 	default:
@@ -71,11 +70,10 @@ func Log(entry LogEntry) {
 }
 
 func LogEvent(event events.Event) {
-	// write to file
+	
 	data, _ := json.Marshal(event)
 	logFile.Write(append(data, '\n'))
 
-	// send JSON to dashboard
 	msgBytes, _ := json.Marshal(event)
 	msg := string(msgBytes)
 

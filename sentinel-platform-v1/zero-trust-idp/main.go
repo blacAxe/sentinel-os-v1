@@ -26,17 +26,14 @@ func main() {
 		godotenv.Load()
 	}
 
-	// Initialize DB
 	err := db.InitDB()
 	if err != nil {
 		log.Fatal("DB init failed:", err)
 	}
 
-	// Configure the WebAuthn instance
 	wconfig := &webauthn.Config{
 		RPDisplayName: "Zero Trust IDP",
 		RPID:          "localhost",
-		//  Added 3000 to origins so the browser allows the passkey handshake
 		RPOrigins: []string{"http://localhost:8080", "http://localhost:3000", "http://localhost:8081"},
 	}
 
@@ -45,12 +42,10 @@ func main() {
 		log.Fatal("Failed to create WebAuthn instance:", err)
 	}
 
-	// Create a NEW ServeMux
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir("./static"))
 
-	// Registration Routes
 	mux.HandleFunc("/register/begin", func(w http.ResponseWriter, r *http.Request) {
 		handlers.BeginRegistration(w, r, webAuthnInstance)
 	})
@@ -58,7 +53,6 @@ func main() {
 		handlers.FinishRegistration(w, r, webAuthnInstance)
 	})
 
-	// Login Routes
 	mux.HandleFunc("/login/begin", func(w http.ResponseWriter, r *http.Request) {
 		handlers.BeginLogin(w, r, webAuthnInstance)
 	})
@@ -77,18 +71,14 @@ func main() {
 	mux.HandleFunc("/auth/refresh", handlers.RefreshToken)
 	mux.HandleFunc("/auth/logout", handlers.Logout)
 
-	// Protected Route
 	mux.HandleFunc("/api/secret-data", handlers.JWTMiddleware(secretHandler))
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	})
-	// Serve frontend (index.html) at root
 	mux.Handle("/", fileServer)
 
-	// Start the server
-	// Start the server
 	log.Println("Server started at http://localhost:8080")
 	err = http.ListenAndServe(":8080", mux)
 }

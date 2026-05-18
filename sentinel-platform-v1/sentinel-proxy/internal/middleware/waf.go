@@ -27,7 +27,6 @@ func WAF(next http.Handler) http.Handler {
 		blocked, reason := rules.EvaluateRequest(r, query)
 
 		if blocked {
-			// Pull the ID we passed from proxy.go
 			userID := "anonymous"
 
 			if reqCtx, ok := authctx.GetRequestContext(r.Context()); ok {
@@ -52,12 +51,9 @@ func WAF(next http.Handler) http.Handler {
 
 			telemetry.Emit(event)
 
-			// NOW it is safe to block the user
 			http.Error(w, "Blocked by Sentinel", http.StatusForbidden)
 			return
 		}
-
-		// Log Allowed for Terminal visualization
 
 		next.ServeHTTP(w, r)
 	})

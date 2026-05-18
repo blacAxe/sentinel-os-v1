@@ -14,7 +14,6 @@ import (
 
 var DB *sql.DB
 
-// Initialize DB connection
 func InitDB() error {
 	connStr := os.Getenv("DB_URL")
 	if connStr == "" {
@@ -52,7 +51,6 @@ type User struct {
 	Credentials []webauthn.Credential
 }
 
-// WebAuthn interface methods
 func (u *User) WebAuthnID() []byte                         { return []byte(u.ID) }
 func (u *User) WebAuthnName() string                       { return u.Name }
 func (u *User) WebAuthnDisplayName() string                { return u.Name }
